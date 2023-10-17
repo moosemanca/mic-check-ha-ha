@@ -16,8 +16,7 @@ namespace MicCheck
             return root.FindFirst(
              TreeScope.Descendants,
              new AndCondition(new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar), new PropertyCondition(AutomationElement.NameProperty, name)));
-             //new PropertyCondition(AutomationElement.NameProperty, name));
-            //new AndCondition(new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Window), new PropertyCondition(AutomationElement.NameProperty, "Save As"))
+
         }
 
         public static IEnumerable<AutomationElement>
@@ -43,7 +42,10 @@ namespace MicCheck
 
     internal class Program
     {
+        // I have two seperate webhooks for separate actions in HomeAssistant. If toggle is action, then set both app.configs to same value.
+        //app.config entry for URL to post to when Mic is detected as in use
         private string webhookURLON =  ConfigurationManager.AppSettings["webhookurl-on"];
+        //app.config entry for URL to post to when Mic is detected as NOT in use
         private string webhookURLOFF = ConfigurationManager.AppSettings["webhookurl-off"];
         static void Main(string[] args)
         {
@@ -70,7 +72,11 @@ namespace MicCheck
 
             return result;
         }
-
+        
+        /// <summary>
+        /// check current Notification Area VISIBLE Icons for microphone icon that says is using your microphone
+        /// </summary>
+        /// <returns></returns>
         public static bool CheckForMicInUse()
         {
             bool micInUse = false;
@@ -84,6 +90,10 @@ namespace MicCheck
             return micInUse;
         }
 
+
+        /// <summary>
+        /// mediocre endless loop for checking if mic is in use. Once found, it calls webhook and initiates similar function checking for not in use
+        /// </summary>
         public static void MonitorForUse()
         {
             bool isInUse = false;
@@ -97,6 +107,10 @@ namespace MicCheck
             Console.WriteLine("Microphone in use. Server notified:  " + result.ToString());
             MonitorForNotInUse();
         }
+
+        /// <summary>
+        /// mediocre endless loop for checking if mic is NOT in use. Once found, it calls webhook and initiates similar function checking for in use
+        /// </summary>
         public static void MonitorForNotInUse()
         {
             bool isInUse = true;
@@ -110,6 +124,11 @@ namespace MicCheck
             MonitorForUse();
         }
 
+
+        /// <summary>
+        /// posting to webhook and returning success or not
+        /// </summary>
+        /// <returns>Boolean as to whether or not the call was successful. </returns>
         public static bool CallWebHook(string url)
         {
             HttpClient client = new HttpClient();
